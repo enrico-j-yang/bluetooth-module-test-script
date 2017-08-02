@@ -13,8 +13,8 @@ from common.human_input import HumanInput
 from common.system_internal_event import SystemInternalEvent
 from common.system_external_event import SystemExternalEvent
 from common.expected_result import ExpectedResult
-from common.actual_result import ActualResult
-from common.test_serial import TestSerial
+from bluetooth_module.bluetooth_module_actual_result import ActualResult
+from bluetooth_module.bluetooth_module_test_serial import TestSerial
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -35,7 +35,7 @@ def before_all(context):
     '''
     if platform.system() == 'Windows':
         try:
-            context.bluetooth_serial_port = TestSerial(port='COM3',
+            context.bluetooth_serial_port = TestSerial(port='COM4',
                                                        baudrate=9600,
                                                        timeout=0,
                                                        parity=TestSerial.PARITY_NONE,
@@ -67,7 +67,6 @@ def before_all(context):
             logging.error("Unknown exception:" + str(e))
         else:
             logging.info("serial opened")
-
     else:
         logging.error("platform:" + platform.system() + "not supported")
         raise PlatformNotSupportedError

@@ -69,44 +69,6 @@ def step_impl(context):
     assert input_string == "OK"
 
 
-@then(u'面板显示蓝牙图标')
-def step_impl(context):
-    context.florenceTestInput.sysIntEvt.mock_bluetooth_connected()
-
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('Bluetooth', 'Connected')
-    context.florenceActRes.mock_value('Bluetooth', 'Connected')
-    context.florenceActRes.get_value('Bluetooth')
-    logging.debug("context.florenceExpRes.Bluetooth: " + str(context.florenceExpRes.dist['Bluetooth']))
-    logging.debug("context.florenceActRes.Bluetooth: " + str(context.florenceActRes.dist['Bluetooth']))
-    assert context.florenceActRes.dist['Bluetooth'] == context.florenceExpRes.dist['Bluetooth']
-
-
-@then(u'面板不显示蓝牙图标')
-def step_impl(context):
-    context.florenceTestInput.sysIntEvt.mock_bluetooth_disconnected()
-
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('Bluetooth', 'Disconnected')
-    context.florenceActRes.mock_value('Bluetooth', 'Disconnected')
-    context.florenceActRes.get_value('Bluetooth')
-    logging.debug("context.florenceExpRes.Bluetooth: " + str(context.florenceExpRes.dist['Bluetooth']))
-    logging.debug("context.florenceActRes.Bluetooth: " + str(context.florenceActRes.dist['Bluetooth']))
-    assert context.florenceActRes.dist['Bluetooth'] == context.florenceExpRes.dist['Bluetooth']
-
-
 @when(u'用户不输入配对码')
 def step_impl(context):
     context.florenceTestInput.sysHIEvt.mock_prompt("Please do not enter pin code")
@@ -116,17 +78,43 @@ def step_impl(context):
 def step_impl(context):
     context.execute_steps(u'''
         假如    蓝牙模块未配对
+        假如    蓝牙模块的配对码为4444
+        假如    蓝牙模块可以连接手机蓝牙
+
         当      用户使用蓝牙设备连接电动车蓝牙模块
-        那么    面板进入系统设置
-        
-        当      用户输入PIN码0000
-        那么    面板显示蓝牙图标
+        而且    用户输入PIN码4444
+        那么    蓝牙模块已连接
         ''')
 
 
-@when(u'用户启动电动车')
+@when(u'用户启动蓝牙模块')
 def step_impl(context):
-    context.florenceTestInput.sysIntEvt.mock_bluetooth_launched()
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please make sure startup bluetooth success")
+
+
+@then(u'蓝牙模块未连接')
+def step_impl(context):
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_disconnected()
+    key = 'BluetoothCMD'
+    value = 'IA'
+    context.florenceExpRes.set_value(key, value)
+    context.florenceActRes.mock_value(key, value)
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
+
+    context.florenceExpRes.set_value(key, 'MG1')
+    context.florenceActRes.mock_value(key, 'MG1')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
+
+
+@then(u'蓝牙模块正在连接')
+def step_impl(context):
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_connecting()
 
 
 @when(u'用户等待{duration}秒后')
@@ -144,59 +132,48 @@ def step_impl(context):
     context.florenceTestInput.sysHIEvt.mock_prompt("Please close cellphone bluetooth")
 
 
-@given(u'面板已经连接手机蓝牙')
+@given(u'蓝牙模块已经连接手机蓝牙')
 def step_impl(context):
     context.execute_steps(u'''
-        假如    蓝牙模块未连接
-        当      用户长按O键
-        那么    面板进入系统设置
-        
-        当      用户短按O键
-        那么    面板显示蓝牙未连接
-        
-        当      用户使用蓝牙设备连接电动车蓝牙模块
-        那么    面板显示蓝牙正在连接
+       假如    蓝牙模块未配对
+        假如    蓝牙模块的配对码为4444
+        假如    蓝牙模块可以连接手机蓝牙
 
-        当      用户的蓝牙设备已经连接上电动车蓝牙模块
-        那么    面板显示蓝牙已连接
-        
-        当      用户长按O键
-        那么    面板进入系统设置
-        
-        当      用户长按O键
-        那么    面板进入主界面
+        当      用户使用蓝牙设备连接电动车蓝牙模块
+        而且    用户输入PIN码4444
+        那么    蓝牙模块已连接
         ''')
 
 
-@when(u'用户在手机上播放音乐')
-def step_impl(context):
-    context.florenceTestInput.sysHIEvt.mock_prompt("Please play music on cellphone bluetooth")
+@when(u'用户在手机上播放音乐({author_name} - {song_name})')
+def step_impl(context, song_name, author_name):
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please play music({"+author_name+"} - {"+song_name+"}) on cellphone bluetooth")
     context.florenceTestInput.sysIntEvt.mock_bluetooth_music_playing()
-    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_information('Music Is The Key', 'Sarah Connor')
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_information('Shape of You', 'Ed Sheeran')
 
 
-@then(u'面板显示音乐歌曲名和歌手名')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
+@then(u'蓝牙模块收到音乐{song_name}和歌手名{author_name}')
+def step_impl(context, song_name, author_name):
+    key = 'MusicPlaying'
+    context.florenceExpRes.set_value(key, 'MB')
+    context.florenceActRes.mock_value(key, 'MB')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
 
-    context.florenceExpRes.set_value('MusicName', 'Music Is The Key')
-    context.florenceActRes.mock_value('MusicName', 'Music Is The Key')
-    context.florenceActRes.get_value('MusicName')
-    logging.debug("context.florenceExpRes.MusicName: " + str(context.florenceExpRes.dist['MusicName']))
-    logging.debug("context.florenceActRes.MusicName: " + str(context.florenceActRes.dist['MusicName']))
-    assert context.florenceActRes.dist['MusicName'] == context.florenceExpRes.dist['MusicName']
+    context.florenceExpRes.set_value('SongName', song_name)
+    context.florenceActRes.mock_value('SongName', song_name)
+    context.florenceActRes.get_value_from_mi('SongName', 'AuthorName', song_name, author_name)
+    logging.debug("context.florenceExpRes." + 'SongName' + ": " + str(context.florenceExpRes.dist['SongName']))
+    logging.debug("context.florenceActRes." + 'SongName' + ": " + str(context.florenceActRes.dist['SongName']))
+    assert context.florenceActRes.dist['SongName'] == context.florenceExpRes.dist['SongName']
 
-    context.florenceExpRes.set_value('MusicAuthor', 'Sarah Connor')
-    context.florenceActRes.mock_value('MusicAuthor', 'Sarah Connor')
-    context.florenceActRes.get_value('MusicAuthor')
-    logging.debug("context.florenceExpRes.MusicAuthor: " + str(context.florenceExpRes.dist['MusicAuthor']))
-    logging.debug("context.florenceActRes.MusicAuthor: " + str(context.florenceActRes.dist['MusicAuthor']))
-    assert context.florenceActRes.dist['MusicAuthor'] == context.florenceExpRes.dist['MusicAuthor']
+    context.florenceExpRes.set_value('AuthorName', author_name)
+    context.florenceActRes.mock_value('AuthorName', author_name)
+    logging.debug("context.florenceExpRes." + 'AuthorName' + ": " + str(context.florenceExpRes.dist['AuthorName']))
+    logging.debug("context.florenceActRes." + 'AuthorName' + ": " + str(context.florenceActRes.dist['AuthorName']))
+    assert context.florenceActRes.dist['AuthorName'] == context.florenceExpRes.dist['AuthorName']
 
 
 @when(u'用户在手机上暂停音乐')
@@ -205,115 +182,138 @@ def step_impl(context):
     context.florenceTestInput.sysIntEvt.mock_bluetooth_music_pause()
 
 
-@then(u'面板不显示音乐歌曲名和歌手名')
+@then(u'蓝牙模块收到暂停音乐播放MA指令')
 def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
+    key = 'MusicPause'
+    context.florenceExpRes.set_value(key, 'MA')
+    context.florenceActRes.mock_value(key, 'MA')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
 
 
-@then(u'面板显示音量减少到静音')
+@when(u'用户减少蓝牙模块音量')
 def step_impl(context):
-    context.florenceExpRes.set_value('BluetoothSerial', 'AT#VD')
-    context.florenceActRes.mock_value('BluetoothSerial', 'AT#VD')
-    context.florenceActRes.get_value('BluetoothSerial')
-    logging.debug("context.florenceExpRes.BluetoothSerial: " + str(context.florenceExpRes.dist['BluetoothSerial']))
-    logging.debug("context.florenceActRes.BluetoothSerial: " + str(context.florenceActRes.dist['BluetoothSerial']))
-    assert context.florenceActRes.dist['BluetoothSerial'] == context.florenceExpRes.dist['BluetoothSerial']
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please make sure decrease music volume")
+    context.florenceTestInput.sysIntEvt.send("AT#VD")  # decrease music volume
+    context.florenceTestInput.sysIntEvt.send("AT#VD")  # decrease music volume
+    context.florenceTestInput.sysIntEvt.send("AT#VD")  # decrease music volume
+    context.florenceTestInput.sysIntEvt.send("AT#VD")  # decrease music volume
 
-    context.florenceExpRes.set_value('Volume', 0)
-    context.florenceActRes.mock_value('Volume', 0)
-    context.florenceActRes.get_value('Volume')
+
+@then(u'蓝牙音乐音量减少')
+def step_impl(context):
+    input_string = context.florenceTestInput.sysHIEvt.mock_prompt("Please enter OK if music volume decrease>>")
+    logging.debug("input_string: " + input_string)
+    assert input_string == "OK"
+
+
+@when(u'用户增加蓝牙模块音量')
+def step_impl(context):
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please make sure increase music volume")
+    context.florenceTestInput.sysIntEvt.send("AT#VU")  # increase music volume
+    context.florenceTestInput.sysIntEvt.send("AT#VU")  # increase music volume
+    context.florenceTestInput.sysIntEvt.send("AT#VU")  # increase music volume
+    context.florenceTestInput.sysIntEvt.send("AT#VU")  # increase music volume
+
+
+@then(u'蓝牙音乐音量增加')
+def step_impl(context):
+    input_string = context.florenceTestInput.sysHIEvt.mock_prompt("Please enter OK if music volume increase>>")
+    logging.debug("input_string: " + input_string)
+    assert input_string == "OK"
+
+
+@when(u'用户减少蓝牙模块音量到{volume}')
+def step_impl(context, volume):
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please make sure decrease music volume")
+    context.florenceTestInput.sysIntEvt.send("AT#MK" + volume)  # decrease music volume 0
+
+
+@when(u'用户增加蓝牙模块音量到{volume}')
+def step_impl(context, volume):
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please make sure increase music volume")
+    context.florenceTestInput.sysIntEvt.send("AT#MK" + volume)  # increase music volume 30
+
+
+@then(u'蓝牙音乐音量减少到{volume}')
+def step_impl(context, volume):
+    input_string = context.florenceTestInput.sysHIEvt.mock_prompt("Please enter OK if music volume decrease>>")
+    logging.debug("input_string: " + input_string)
+    assert input_string == "OK"
+
+    context.florenceExpRes.set_value('Volume', 'MK' + volume)
+    context.florenceActRes.mock_value('Volume', 'MK ' + volume)
+    context.florenceActRes.get_value_from_multi_line('Volume', context.florenceExpRes.get_value('Volume'))
     logging.debug("context.florenceExpRes.Volume: " + str(context.florenceExpRes.dist['Volume']))
     logging.debug("context.florenceActRes.Volume: " + str(context.florenceActRes.dist['Volume']))
     assert context.florenceActRes.dist['Volume'] == context.florenceExpRes.dist['Volume']
 
 
-@then(u'面板显示音量增加到最大')
-def step_impl(context):
-    context.florenceExpRes.set_value('BluetoothSerial', 'AT#VU')
-    context.florenceActRes.mock_value('BluetoothSerial', 'AT#VU')
-    context.florenceActRes.get_value('BluetoothSerial')
-    logging.debug("context.florenceExpRes.BluetoothSerial: " + str(context.florenceExpRes.dist['BluetoothSerial']))
-    logging.debug("context.florenceActRes.BluetoothSerial: " + str(context.florenceActRes.dist['BluetoothSerial']))
-    assert context.florenceActRes.dist['BluetoothSerial'] == context.florenceExpRes.dist['BluetoothSerial']
+@then(u'蓝牙音乐音量增加到{volume}')
+def step_impl(context, volume):
+    input_string = context.florenceTestInput.sysHIEvt.mock_prompt("Please enter OK if music volume increase>>")
+    logging.debug("input_string: " + input_string)
+    assert input_string == "OK"
 
-    context.florenceExpRes.set_value('Volume', 10)
-    context.florenceActRes.mock_value('Volume', 10)
-    context.florenceActRes.get_value('Volume')
+    context.florenceExpRes.set_value('Volume', 'MK' + volume)
+    context.florenceActRes.mock_value('Volume', 'MK' + volume)
+    context.florenceActRes.get_value_from_multi_line('Volume', context.florenceExpRes.get_value('Volume'))
     logging.debug("context.florenceExpRes.Volume: " + str(context.florenceExpRes.dist['Volume']))
     logging.debug("context.florenceActRes.Volume: " + str(context.florenceActRes.dist['Volume']))
     assert context.florenceActRes.dist['Volume'] == context.florenceExpRes.dist['Volume']
 
 
-@then(u'面板显示上一首歌曲名和歌手名')
-def step_impl(context):
-    context.florenceExpRes.set_value('BluetoothSerial', 'AT#ME')
-    context.florenceActRes.mock_value('BluetoothSerial', 'AT#ME')
-    context.florenceActRes.get_value('BluetoothSerial')
-    logging.debug("context.florenceExpRes.BluetoothSerial: " + str(context.florenceExpRes.dist['BluetoothSerial']))
-    logging.debug("context.florenceActRes.BluetoothSerial: " + str(context.florenceActRes.dist['BluetoothSerial']))
-    assert context.florenceActRes.dist['BluetoothSerial'] == context.florenceExpRes.dist['BluetoothSerial']
+@when(u'用户在手机上切换音乐到上一首歌({author_name} - {song_name})')
+def step_impl(context, author_name, song_name):
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please play previously music("+author_name+" - "+song_name+") on cellphone bluetooth")
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_playing()
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_information('Galway Girl', 'Ed Sheeran')
 
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
 
-    context.florenceExpRes.set_value('MusicName', 'Previously Music')
-    context.florenceActRes.mock_value('MusicName', 'Previously Music')
-    context.florenceActRes.get_value('MusicName')
-    logging.debug("context.florenceExpRes.MusicName: " + str(context.florenceExpRes.dist['MusicName']))
-    logging.debug("context.florenceActRes.MusicName: " + str(context.florenceActRes.dist['MusicName']))
-    assert context.florenceActRes.dist['MusicName'] == context.florenceExpRes.dist['MusicName']
+@then(u'蓝牙模块收到上一首歌曲名{song_name}和歌手名{author_name}')
+def step_impl(context, song_name, author_name):
+    context.florenceExpRes.set_value('SongName', song_name)
+    context.florenceActRes.mock_value('SongName', song_name)
+    context.florenceActRes.get_value_from_mi('SongName', 'AuthorName', song_name, author_name)
+    logging.debug("context.florenceExpRes." + 'SongName' + ": " + str(context.florenceExpRes.dist['SongName']))
+    logging.debug("context.florenceActRes." + 'SongName' + ": " + str(context.florenceActRes.dist['SongName']))
+    assert context.florenceActRes.dist['SongName'] == context.florenceExpRes.dist['SongName']
 
-    context.florenceExpRes.set_value('MusicAuthor', 'Previously Author')
-    context.florenceActRes.mock_value('MusicAuthor', 'Previously Author')
-    context.florenceActRes.get_value('MusicAuthor')
-    logging.debug("context.florenceExpRes.MusicAuthor: " + str(context.florenceExpRes.dist['MusicAuthor']))
-    logging.debug("context.florenceActRes.MusicAuthor: " + str(context.florenceActRes.dist['MusicAuthor']))
-    assert context.florenceActRes.dist['MusicAuthor'] == context.florenceExpRes.dist['MusicAuthor']
+    context.florenceExpRes.set_value('AuthorName', author_name)
+    context.florenceActRes.mock_value('AuthorName', author_name)
+    logging.debug("context.florenceExpRes." + 'AuthorName' + ": " + str(context.florenceExpRes.dist['AuthorName']))
+    logging.debug("context.florenceActRes." + 'AuthorName' + ": " + str(context.florenceActRes.dist['AuthorName']))
+    assert context.florenceActRes.dist['AuthorName'] == context.florenceExpRes.dist['AuthorName']
+
+
+@when(u'用户在手机上切换音乐到下一首歌({author_name} - {song_name})')
+def step_impl(context, author_name, song_name):
+    context.florenceTestInput.sysHIEvt.mock_prompt("Please play next music("+author_name+" - "+song_name+") on cellphone bluetooth")
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_playing()
+    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_information('Galway Girl', 'Ed Sheeran')
+
+
+@then(u'蓝牙模块收到下一首歌曲名{song_name}和歌手名{author_name}')
+def step_impl(context, song_name, author_name):
+    context.florenceExpRes.set_value('SongName', song_name)
+    context.florenceActRes.mock_value('SongName', song_name)
+    context.florenceActRes.get_value_from_mi('SongName', 'AuthorName', song_name, author_name)
+    logging.debug("context.florenceExpRes." + 'SongName' + ": " + str(context.florenceExpRes.dist['SongName']))
+    logging.debug("context.florenceActRes." + 'SongName' + ": " + str(context.florenceActRes.dist['SongName']))
+    assert context.florenceActRes.dist['SongName'] == context.florenceExpRes.dist['SongName']
+
+    context.florenceExpRes.set_value('AuthorName', author_name)
+    context.florenceActRes.mock_value('AuthorName', author_name)
+    logging.debug("context.florenceExpRes." + 'AuthorName' + ": " + str(context.florenceExpRes.dist['AuthorName']))
+    logging.debug("context.florenceActRes." + 'AuthorName' + ": " + str(context.florenceActRes.dist['AuthorName']))
+    assert context.florenceActRes.dist['AuthorName'] == context.florenceExpRes.dist['AuthorName']
 
 
 @then(u'蓝牙模块播放上一首歌曲')
 def step_impl(context):
     context.florenceTestInput.sysHIEvt.mock_prompt("Please press enter if play previously music")
-
-
-@then(u'面板显示下一首歌曲歌曲名和歌手名')
-def step_impl(context):
-    context.florenceExpRes.set_value('BluetoothSerial', 'AT#MD')
-    context.florenceActRes.mock_value('BluetoothSerial', 'AT#MD')
-    context.florenceActRes.get_value('BluetoothSerial')
-    logging.debug("context.florenceExpRes.BluetoothSerial: " + str(context.florenceExpRes.dist['BluetoothSerial']))
-    logging.debug("context.florenceActRes.BluetoothSerial: " + str(context.florenceActRes.dist['BluetoothSerial']))
-    assert context.florenceActRes.dist['BluetoothSerial'] == context.florenceExpRes.dist['BluetoothSerial']
-
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('MusicName', 'Next Music')
-    context.florenceActRes.mock_value('MusicName', 'Next Music')
-    context.florenceActRes.get_value('MusicName')
-    logging.debug("context.florenceExpRes.MusicName: " + str(context.florenceExpRes.dist['MusicName']))
-    logging.debug("context.florenceActRes.MusicName: " + str(context.florenceActRes.dist['MusicName']))
-    assert context.florenceActRes.dist['MusicName'] == context.florenceExpRes.dist['MusicName']
-
-    context.florenceExpRes.set_value('MusicAuthor', 'Next Author')
-    context.florenceActRes.mock_value('MusicAuthor', 'Next Author')
-    context.florenceActRes.get_value('MusicAuthor')
-    logging.debug("context.florenceExpRes.MusicAuthor: " + str(context.florenceExpRes.dist['MusicAuthor']))
-    logging.debug("context.florenceActRes.MusicAuthor: " + str(context.florenceActRes.dist['MusicAuthor']))
-    assert context.florenceActRes.dist['MusicAuthor'] == context.florenceExpRes.dist['MusicAuthor']
 
 
 @then(u'蓝牙模块播放下一首歌曲')
@@ -327,18 +327,55 @@ def step_impl(context):
     context.florenceTestInput.sysIntEvt.mock_bluetooth_incoming_call('13888888888')
 
 
-@then(u'面板显示来电图标和来电号码')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'IncomingCall')
-    context.florenceActRes.mock_value('UIStatus', 'IncomingCall')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
+@then(u'蓝牙模块收到来电指令和来电号码{phone_number}')
+def step_impl(context, phone_number):
+    key = 'IncomingCall'
+    context.florenceExpRes.set_value(key, 'MG5')
+    context.florenceActRes.mock_value(key, 'MG5')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
 
-    context.florenceExpRes.set_value('PhoneNumber', '13888888888')
-    context.florenceActRes.mock_value('PhoneNumber', '13888888888')
-    context.florenceActRes.get_value('PhoneNumber')
+    context.florenceExpRes.set_value('PhoneNumber', 'ID' + phone_number)
+    context.florenceActRes.mock_value('PhoneNumber', 'ID' + phone_number)
+    context.florenceActRes.get_value_from_multi_line('PhoneNumber', context.florenceExpRes.get_value('PhoneNumber'))
+    logging.debug("context.florenceExpRes.PhoneNumber: " + str(context.florenceExpRes.dist['PhoneNumber']))
+    logging.debug("context.florenceActRes.PhoneNumber: " + str(context.florenceActRes.dist['PhoneNumber']))
+    assert context.florenceActRes.dist['PhoneNumber'] == context.florenceExpRes.dist['PhoneNumber']
+
+
+@then(u'蓝牙模块收到通话中的指令和通话号码{phone_number}')
+def step_impl(context, phone_number):
+    key = 'Calling'
+    context.florenceExpRes.set_value(key, 'MG6')
+    context.florenceActRes.mock_value(key, 'MG6')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
+
+    context.florenceExpRes.set_value('PhoneNumber', 'IR' + phone_number)
+    context.florenceActRes.mock_value('PhoneNumber', 'IR' + phone_number)
+    context.florenceActRes.get_value_from_multi_line('PhoneNumber', context.florenceExpRes.get_value('PhoneNumber'))
+    logging.debug("context.florenceExpRes.PhoneNumber: " + str(context.florenceExpRes.dist['PhoneNumber']))
+    logging.debug("context.florenceActRes.PhoneNumber: " + str(context.florenceActRes.dist['PhoneNumber']))
+    assert context.florenceActRes.dist['PhoneNumber'] == context.florenceExpRes.dist['PhoneNumber']
+
+
+@then(u'蓝牙模块收到挂断指令和挂断号码')
+def step_impl(context):
+    key = 'HangUpCall'
+    context.florenceExpRes.set_value(key, 'MG3')
+    context.florenceActRes.mock_value(key, 'MG3')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
+
+    context.florenceExpRes.set_value('PhoneNumber', 'IF')
+    context.florenceActRes.mock_value('PhoneNumber', 'IF')
+    context.florenceActRes.get_value_from_multi_line('PhoneNumber', context.florenceExpRes.get_value('PhoneNumber'))
     logging.debug("context.florenceExpRes.PhoneNumber: " + str(context.florenceExpRes.dist['PhoneNumber']))
     logging.debug("context.florenceActRes.PhoneNumber: " + str(context.florenceActRes.dist['PhoneNumber']))
     assert context.florenceActRes.dist['PhoneNumber'] == context.florenceExpRes.dist['PhoneNumber']
@@ -350,44 +387,10 @@ def step_impl(context):
     context.florenceTestInput.sysIntEvt.mock_bluetooth_calling('13888888888')
 
 
-@then(u'面板显示通话图标和通话号码')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'Calling')
-    context.florenceActRes.mock_value('UIStatus', 'Calling')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('PhoneNumber', '13888888888')
-    context.florenceActRes.mock_value('PhoneNumber', '13888888888')
-    context.florenceActRes.get_value('PhoneNumber')
-    logging.debug("context.florenceExpRes.PhoneNumber: " + str(context.florenceExpRes.dist['PhoneNumber']))
-    logging.debug("context.florenceActRes.PhoneNumber: " + str(context.florenceActRes.dist['PhoneNumber']))
-    assert context.florenceActRes.dist['PhoneNumber'] == context.florenceExpRes.dist['PhoneNumber']
-
-
 @when(u'用户挂断电话')
 def step_impl(context):
     context.florenceTestInput.sysHIEvt.mock_prompt("Please hang up call")
     context.florenceTestInput.sysIntEvt.mock_bluetooth_hangup_call()
-
-
-@then(u'面板显示挂断图标和挂断号码')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'HangUpCall')
-    context.florenceActRes.mock_value('UIStatus', 'HangUpCall')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('PhoneNumber', '13888888888')
-    context.florenceActRes.mock_value('PhoneNumber', '13888888888')
-    context.florenceActRes.get_value('PhoneNumber')
-    logging.debug("context.florenceExpRes.PhoneNumber: " + str(context.florenceExpRes.dist['PhoneNumber']))
-    logging.debug("context.florenceActRes.PhoneNumber: " + str(context.florenceActRes.dist['PhoneNumber']))
-    assert context.florenceActRes.dist['PhoneNumber'] == context.florenceExpRes.dist['PhoneNumber']
 
 
 @when(u'用户使用已连接蓝牙模块的手机拨打另一台手机')
@@ -396,86 +399,35 @@ def step_impl(context):
     context.florenceTestInput.sysIntEvt.mock_bluetooth_dialing('13888888888')
 
 
-@then(u'面板显示拨打图标和拨打号码')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'Dialing')
-    context.florenceActRes.mock_value('UIStatus', 'Dialing')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
+@then(u'蓝牙模块收到拨打指令和拨打号码{phone_number}')
+def step_impl(context, phone_number):
+    key = 'Calling'
+    context.florenceExpRes.set_value(key, 'MG4')
+    context.florenceActRes.mock_value(key, 'MG4')
+    context.florenceActRes.get_value_from_multi_line(key, context.florenceExpRes.get_value(key))
+    logging.debug("context.florenceExpRes." + key + ": " + str(context.florenceExpRes.dist[key]))
+    logging.debug("context.florenceActRes." + key + ": " + str(context.florenceActRes.dist[key]))
+    assert context.florenceActRes.dist[key] == context.florenceExpRes.dist[key]
 
-    context.florenceExpRes.set_value('PhoneNumber', '13888888888')
-    context.florenceActRes.mock_value('PhoneNumber', '13888888888')
-    context.florenceActRes.get_value('PhoneNumber')
+    context.florenceExpRes.set_value('PhoneNumber', 'IC' + phone_number)
+    context.florenceActRes.mock_value('PhoneNumber', 'IC' + phone_number)
+    context.florenceActRes.get_value_from_multi_line('PhoneNumber', context.florenceExpRes.get_value('PhoneNumber'))
     logging.debug("context.florenceExpRes.PhoneNumber: " + str(context.florenceExpRes.dist['PhoneNumber']))
     logging.debug("context.florenceActRes.PhoneNumber: " + str(context.florenceActRes.dist['PhoneNumber']))
     assert context.florenceActRes.dist['PhoneNumber'] == context.florenceExpRes.dist['PhoneNumber']
 
 
-@given(u'蓝牙模块音乐播放中')
+@given(u'蓝牙模块音乐(Ed Sheeran - Shape of You)播放中')
 def step_impl(context):
-    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_playing()
-    context.florenceTestInput.sysIntEvt.mock_bluetooth_music_information('Music Is The Key', 'Sarah Connor')
-
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('MusicName', 'Music Is The Key')
-    context.florenceActRes.mock_value('MusicName', 'Music Is The Key')
-    context.florenceActRes.get_value('MusicName')
-    logging.debug("context.florenceExpRes.MusicName: " + str(context.florenceExpRes.dist['MusicName']))
-    logging.debug("context.florenceActRes.MusicName: " + str(context.florenceActRes.dist['MusicName']))
-    assert context.florenceActRes.dist['MusicName'] == context.florenceExpRes.dist['MusicName']
-
-    context.florenceExpRes.set_value('MusicAuthor', 'Sarah Connor')
-    context.florenceActRes.mock_value('MusicAuthor', 'Sarah Connor')
-    context.florenceActRes.get_value('MusicAuthor')
-    logging.debug("context.florenceExpRes.MusicAuthor: " + str(context.florenceExpRes.dist['MusicAuthor']))
-    logging.debug("context.florenceActRes.MusicAuthor: " + str(context.florenceActRes.dist['MusicAuthor']))
-    assert context.florenceActRes.dist['MusicAuthor'] == context.florenceExpRes.dist['MusicAuthor']
+    context.execute_steps(u'''
+        当      用户在手机上播放音乐(Ed Sheeran - Shape Of You)
+        那么    蓝牙模块收到音乐Shape of You和歌手名Ed Sheeran
+        ''')
 
 
-@then(u'面板暂停音乐播放')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-
-@then(u'面板恢复音乐播放')
+@then(u'蓝牙模块恢复音乐播放')
 def step_impl(context):
     context.florenceTestInput.sysHIEvt.mock_prompt("Please press enter if play music")
     context.florenceTestInput.sysIntEvt.mock_bluetooth_music_playing()
     context.florenceTestInput.sysIntEvt.mock_bluetooth_music_information('Music Is The Key', 'Sarah Connor')
 
-
-@then(u'面板返回音乐播放界面')
-def step_impl(context):
-    context.florenceExpRes.set_value('UIStatus', 'Home')
-    context.florenceActRes.mock_value('UIStatus', 'Home')
-    context.florenceActRes.get_value('UIStatus')
-    logging.debug("context.florenceExpRes.UIStatus: " + str(context.florenceExpRes.dist['UIStatus']))
-    logging.debug("context.florenceActRes.UIStatus: " + str(context.florenceActRes.dist['UIStatus']))
-    assert context.florenceActRes.dist['UIStatus'] == context.florenceExpRes.dist['UIStatus']
-
-    context.florenceExpRes.set_value('MusicName', 'Music Is The Key')
-    context.florenceActRes.mock_value('MusicName', 'Music Is The Key')
-    context.florenceActRes.get_value('MusicName')
-    logging.debug("context.florenceExpRes.MusicName: " + str(context.florenceExpRes.dist['MusicName']))
-    logging.debug("context.florenceActRes.MusicName: " + str(context.florenceActRes.dist['MusicName']))
-    assert context.florenceActRes.dist['MusicName'] == context.florenceExpRes.dist['MusicName']
-
-    context.florenceExpRes.set_value('MusicAuthor', 'Sarah Connor')
-    context.florenceActRes.mock_value('MusicAuthor', 'Sarah Connor')
-    context.florenceActRes.get_value('MusicAuthor')
-    logging.debug("context.florenceExpRes.MusicAuthor: " + str(context.florenceExpRes.dist['MusicAuthor']))
-    logging.debug("context.florenceActRes.MusicAuthor: " + str(context.florenceActRes.dist['MusicAuthor']))
-    assert context.florenceActRes.dist['MusicAuthor'] == context.florenceExpRes.dist['MusicAuthor']
